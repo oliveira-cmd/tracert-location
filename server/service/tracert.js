@@ -1,3 +1,4 @@
+const axios = require('axios');
 const { exec } = require('child_process');
 
 function parseTracertOutput(output) {
@@ -31,7 +32,33 @@ const tracertService = {
                 resolve(result);
             });
         });
+    },
+    async locationByIp(tracert) {
+        const data = []
+        try {
+            const ip_address = this.extractIp(tracert);
+    
+            for (const ip of ip_address) {
+                const response = await axios.get(`https://ipwho.is/${ip}`);
+                if(response.data.success){
+                    data.push(response.data)
+                }
+            }
+            return data
+    
+        } catch (error) {
+            console.log(error.message);
+        }
+    },
+    
+
+    extractIp(hops){
+        return hops.map(hop => {
+            const match = hop.ip.match(/\b\d{1,3}(\.\d{1,3}){3}\b/);
+            return match ? match[0] : null;
+        }).filter(ip => ip !== null);
     }
+
 };
 
 module.exports = tracertService;
